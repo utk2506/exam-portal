@@ -1,0 +1,27 @@
+{
+  "name": "office-lan-exam-platform",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "services/*"
+  ],
+  "scripts": {
+    "dev:frontend": "npm run dev -w @exam-platform/frontend",
+    "dev:api": "npm run dev -w @exam-platform/api",
+    "start:local": "powershell -ExecutionPolicy Bypass -File ./scripts/run-local.ps1",
+    "build:shared": "npm run build -w @exam-platform/shared",
+    "build:api": "npm run build -w @exam-platform/api",
+    "build:frontend": "npm run build -w @exam-platform/frontend",
+    "build": "npm run build:shared && npm run build:api && npm run build:frontend",
+    "test": "npm run test -w @exam-platform/api",
+    "prisma:generate": "npm run prisma:generate -w @exam-platform/api",
+    "prisma:push": "npm run prisma:push -w @exam-platform/api",
+    "prisma:migrate": "npm run prisma:migrate -w @exam-platform/api",
+    "prisma:seed": "npm run prisma:seed -w @exam-platform/api"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

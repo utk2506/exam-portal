@@ -1,0 +1,3 @@
+type,promptHtml,optionAHtml,optionBHtml,optionCHtml,optionDHtml,correctOption,marks,sortOrder,assetFilename
+mcq,"<p>What is the value of 2 + 2?</p>","<p>3</p>","<p>4</p>","<p>5</p>","<p>6</p>",B,4,1,
+subjective,"<p>State and explain Ohm's law with one practical example.</p>",,,,,,6,2,

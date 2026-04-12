@@ -1,0 +1,17 @@
+node_modules
+dist
+.vite
+.turbo
+.cache
+.env
+.env.local
+coverage
+apps/api/generated
+apps/api/prisma/dev.db
+apps/api/uploads
+apps/frontend/.vercel
+packages/shared/src/*.js
+packages/shared/src/*.js.map
+__pycache__
+*.pyc
+.DS_Store

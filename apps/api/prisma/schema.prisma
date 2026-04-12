@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ExamStatus {
+  draft
+  scheduled
+  live
+  stopped
+  completed
+}
+
+enum QuestionType {
+  mcq
+  subjective
+}
+
+enum SessionStatus {
+  registered
+  in_progress
+  submitted
+  expired
+  stopped
+}
+
+enum ViolationSeverity {
+  info
+  warning
+  critical
+}
+
+enum McqOption {
+  A
+  B
+  C
+  D
+}
+
+enum ScoringMode {
+  positive_only
+}
+
+model Admin {
+  id           String            @id @default(cuid())
+  username     String            @unique
+  passwordHash String
+  displayName  String
+  lastLoginAt  DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  scores       SubjectiveScore[]
+}
+
+model Exam {
+  id                   String             @id @default(cuid())
+  title                String
+  examCode             String             @unique
+  instructionsHtml     String             @db.Text
+  status               ExamStatus         @default(draft)
+  durationMinutes      Int                @default(60)
+  totalMarks           Int
+  scoringMode          ScoringMode        @default(positive_only)
+  resultsPublished     Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  questions            Question[]
+  candidateSessions    CandidateSession[]
+}
+
+model Question {
+  id             String            @id @default(cuid())
+  examId         String
+  type           QuestionType
+  promptHtml     String            @db.Text
+  optionAHtml    String?           @db.Text
+  optionBHtml    String?           @db.Text
+  optionCHtml    String?           @db.Text
+  optionDHtml    String?           @db.Text
+  correctOption  McqOption?
+  marks          Int
+  sortOrder      Int
+  assetUrl       String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  exam           Exam              @relation(fields: [examId], references: [id], onDelete: Cascade)
+  responses      Response[]
+  scores         SubjectiveScore[]
+
+  @@index([examId, sortOrder])
+}
+
+model CandidateSession {
+  id               String            @id @default(cuid())
+  candidateId      String            @unique
+  examId           String
+  name             String
+  email            String
+  phone            String
+  ipAddress        String
+  status           SessionStatus     @default(registered)
+  registeredAt     DateTime          @default(now())
+  startedAt        DateTime?
+  endsAt           DateTime?
+  submittedAt      DateTime?
+  questionOrder    Json?
+  optionOrderMap   Json?
+  lastHeartbeatAt  DateTime?
+  warningCount     Int               @default(0)
+  currentQuestionId String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  exam             Exam              @relation(fields: [examId], references: [id], onDelete: Cascade)
+  responses        Response[]
+  violations       Violation[]
+  subjectiveScores SubjectiveScore[]
+  result           Result?
+
+  @@index([examId, email, phone])
+  @@index([status, endsAt])
+}
+
+model Response {
+  id                   String           @id @default(cuid())
+  sessionId            String
+  questionId           String
+  selectedOption       McqOption?
+  subjectiveAnswerHtml String?          @db.Text
+  savedAt              DateTime         @default(now())
+  finalSubmitted       Boolean          @default(false)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  session              CandidateSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question             Question         @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, questionId])
+}
+
+model Violation {
+  id         String             @id @default(cuid())
+  sessionId  String
+  type       String
+  severity   ViolationSeverity
+  metadata   Json
+  detectedAt DateTime           @default(now())
+  session    CandidateSession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, detectedAt])
+}
+
+model SubjectiveScore {
+  id               String           @id @default(cuid())
+  sessionId        String
+  questionId       String
+  evaluatorAdminId String
+  awardedMarks     Int
+  remarks          String?          @db.Text
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  session          CandidateSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question         Question         @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  evaluator        Admin            @relation(fields: [evaluatorAdminId], references: [id], onDelete: Restrict)
+
+  @@unique([sessionId, questionId])
+}
+
+model Result {
+  id              String           @id @default(cuid())
+  sessionId       String           @unique
+  mcqScore        Int              @default(0)
+  subjectiveScore Int              @default(0)
+  totalScore      Int              @default(0)
+  finalizedAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  session         CandidateSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}

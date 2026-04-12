@@ -1,0 +1,11 @@
+type,promptHtml,optionAHtml,optionBHtml,optionCHtml,optionDHtml,correctOption,marks,sortOrder
+mcq,<p>What is the SI unit of electric current?</p>,<p>Volt</p>,<p>Ampere</p>,<p>Ohm</p>,<p>Watt</p>,B,4,1
+mcq,<p>Which planet is known as the Red Planet?</p>,<p>Jupiter</p>,<p>Venus</p>,<p>Mars</p>,<p>Saturn</p>,C,4,2
+mcq,<p>What is the chemical formula of water?</p>,<p>CO2</p>,<p>H2O2</p>,<p>H2O</p>,<p>NaCl</p>,C,4,3
+mcq,<p>Who invented the telephone?</p>,<p>Thomas Edison</p>,<p>Alexander Graham Bell</p>,<p>Nikola Tesla</p>,<p>James Watt</p>,B,4,4
+mcq,<p>What is the speed of light in vacuum (approx)?</p>,<p>3 x 10^6 m/s</p>,<p>3 x 10^8 m/s</p>,<p>3 x 10^10 m/s</p>,<p>3 x 10^4 m/s</p>,B,4,5
+mcq,<p>What is the powerhouse of the cell?</p>,<p>Nucleus</p>,<p>Ribosome</p>,<p>Mitochondria</p>,<p>Vacuole</p>,C,4,6
+mcq,<p>In which year did World War II end?</p>,<p>1943</p>,<p>1944</p>,<p>1945</p>,<p>1946</p>,C,2,7
+mcq,<p>What is the boiling point of water at sea level?</p>,<p>90°C</p>,<p>95°C</p>,<p>100°C</p>,<p>110°C</p>,C,2,8
+subjective,<p>Explain the concept of Newton's Law of Gravitation. How does it apply to planetary motion?</p>,,,,,,10,9
+subjective,<p>Describe the differences between renewable and non-renewable energy sources. Give two examples of each.</p>,,,,,,10,10

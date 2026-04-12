@@ -1,0 +1,73 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: exam_platform
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      API_PORT: 8080
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/exam_platform?schema=public
+      JWT_SECRET: change-me-for-production
+      PROCTOR_API_TOKEN: change-me-proctor
+      APP_ORIGIN: http://192.168.1.10
+      FRONTEND_PORT: 4173
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: ChangeMe123!
+      UPLOADS_DIR: /app/apps/api/uploads
+      ENABLE_AI_PROCTORING: "false"
+      PROCTOR_SERVICE_URL: http://ai-proctor:8090
+    depends_on:
+      - postgres
+    volumes:
+      - uploads_data:/app/apps/api/uploads
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "4173:4173"
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      - api
+      - frontend
+    ports:
+      - "80:80"
+    volumes:
+      - ./infra/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - uploads_data:/app/uploads:ro
+
+  ai-proctor:
+    build:
+      context: .
+      dockerfile: services/ai-proctor/Dockerfile
+    restart: unless-stopped
+    profiles:
+      - ai
+    ports:
+      - "8090:8090"
+
+volumes:
+  postgres_data:
+  uploads_data:
