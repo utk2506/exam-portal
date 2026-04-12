@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AdminQuestionDto, ExamDetailDto, ExamSummaryDto } from "@exam-platform/shared";
 
@@ -83,6 +83,23 @@ export function ExamManager({
       await queryClient.invalidateQueries({ queryKey: ["exam-detail", selectedExamId] });
     }
   });
+
+  // Scroll to edit form when editing starts
+  useEffect(() => {
+    if (editingQuestion) {
+      setTimeout(() => {
+        const element = document.getElementById("question-composer");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+          // Focus on the first input for better UX
+          const firstInput = element.querySelector("input, textarea, select");
+          if (firstInput instanceof HTMLElement) {
+            firstInput.focus();
+          }
+        }
+      }, 100);
+    }
+  }, [editingQuestion]);
 
   const handleCreate = (event: FormEvent) => {
     event.preventDefault();
@@ -271,7 +288,10 @@ export function ExamManager({
                           title="Edit question"
                           onClick={() => {
                             setEditingQuestion(question);
-                            document.getElementById("question-composer")?.scrollIntoView({ behavior: "smooth" });
+                            // Scroll after state update completes
+                            setTimeout(() => {
+                              document.getElementById("question-composer")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                            }, 100);
                           }}
                           className="rounded-lg p-1.5 text-teal-600 transition hover:bg-teal-50"
                         >
