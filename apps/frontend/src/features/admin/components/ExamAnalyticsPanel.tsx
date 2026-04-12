@@ -75,6 +75,9 @@ export function ExamAnalyticsPanel({ examId }: { examId: string }) {
       <Card className="space-y-3">
         <h3 className="font-display text-2xl text-ink">Exam Analytics</h3>
         <p className="text-sm text-muted">No completed submissions yet for this exam.</p>
+        <div className="min-h-96 rounded-2xl border border-stone-100 bg-stone-50 p-4">
+          <p className="text-center text-sm text-muted py-8">Analytics will appear here once students submit exams</p>
+        </div>
       </Card>
     );
   }
@@ -83,14 +86,16 @@ export function ExamAnalyticsPanel({ examId }: { examId: string }) {
   const maxAttempts = Math.max(...data.questionStats.map((q) => q.attempts), 1);
 
   return (
-    <Card className="space-y-6">
+    <Card className="space-y-4">
       <div>
         <h3 className="font-display text-2xl text-ink">Exam Analytics</h3>
         <p className="text-sm text-muted">Score and accuracy breakdown for {data.title}.</p>
       </div>
 
-      {/* Summary stats */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {/* Scrollable analytics area */}
+      <div className="max-h-[600px] overflow-y-auto rounded-2xl border border-stone-100 bg-white p-6 space-y-6">
+        {/* Summary stats */}
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <div className="rounded-2xl bg-stone-50 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Submissions</p>
           <p className="mt-2 font-display text-4xl text-ink">{data.submittedCount}</p>
@@ -136,21 +141,22 @@ export function ExamAnalyticsPanel({ examId }: { examId: string }) {
         </div>
       )}
 
-      {/* Attempts per question */}
-      <div className="space-y-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-          Attempts per Question
-        </p>
-        <div className="space-y-3">
-          {data.questionStats.map((q) => (
-            <BarChart
-              key={q.questionId}
-              label={`Q${q.sortOrder} (${q.type})`}
-              value={q.attempts}
-              max={maxAttempts}
-              color="sky"
-            />
-          ))}
+        {/* Attempts per question */}
+        <div className="space-y-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+            Attempts per Question
+          </p>
+          <div className="space-y-3">
+            {data.questionStats.map((q) => (
+              <BarChart
+                key={q.questionId}
+                label={`Q${q.sortOrder} (${q.type})`}
+                value={q.attempts}
+                max={maxAttempts}
+                color="sky"
+              />
+            ))}
+          </div>
         </div>
       </div>
     </Card>

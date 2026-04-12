@@ -36,13 +36,20 @@ export function PendingReviewsPanel({ entries }: { entries: PendingSubjectiveRev
   });
 
   return (
-    <Card className="space-y-6">
+    <Card className="space-y-4 flex flex-col">
       <div>
         <h3 className="font-display text-2xl text-ink">Subjective Review Queue</h3>
         <p className="text-sm text-muted">Evaluate typed responses and update result totals without leaving the dashboard.</p>
       </div>
 
-      <div className="space-y-6">
+      <div className="flex-1 overflow-y-auto max-h-[700px] rounded-2xl border border-stone-100 bg-stone-50 p-4 space-y-6">
+        {entries.length === 0 ? (
+          <div className="flex items-center justify-center h-80">
+            <p className="text-sm text-muted">No pending subjective reviews.</p>
+          </div>
+        ) : (
+          <>
+
         {entries.map((entry) => (
           <div key={entry.session.id} className="rounded-3xl border border-stone-100 bg-stone-50/80 p-4">
             <div className="mb-4">
@@ -106,8 +113,9 @@ export function PendingReviewsPanel({ entries }: { entries: PendingSubjectiveRev
               })}
             </div>
           </div>
-        ))}
-        {entries.length === 0 ? <p className="text-sm text-muted">No pending subjective reviews.</p> : null}
+          ))}
+          </>
+        )}
       </div>
     </Card>
   );

@@ -25,13 +25,19 @@ export function MonitoringPanel({
 
   return (
     <div className="grid gap-4 xl:grid-cols-[2fr,1fr]">
-      <Card className="space-y-4">
+      <Card className="space-y-4 flex flex-col">
         <div>
           <h3 className="font-display text-2xl text-ink">Live Monitoring</h3>
           <p className="text-sm text-muted">Track active candidates, warnings, and session health in one place.</p>
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
+        <div className="flex-1 overflow-auto max-h-[500px] rounded-2xl border border-stone-100 bg-stone-50">
+          {sessions.length === 0 ? (
+            <div className="flex items-center justify-center h-80">
+              <p className="text-sm text-muted">No active sessions yet.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
             <thead className="text-left text-xs uppercase tracking-[0.14em] text-muted">
               <tr>
                 <th className="pb-3">Candidate</th>
@@ -84,16 +90,25 @@ export function MonitoringPanel({
                 </tr>
               ))}
             </tbody>
-          </table>
+              </table>
+            </div>
+          )}
         </div>
       </Card>
 
-      <Card className="space-y-4">
+      <Card className="space-y-4 flex flex-col">
         <div>
           <h3 className="font-display text-2xl text-ink">Recent Violations</h3>
           <p className="text-sm text-muted">Latest anti-cheat signals across all sessions.</p>
         </div>
-        <div className="space-y-3">
+        <div className="flex-1 overflow-y-auto max-h-[500px] rounded-2xl border border-stone-100 bg-stone-50 p-4 space-y-3">
+          {violations.length === 0 ? (
+            <div className="flex items-center justify-center h-64">
+              <p className="text-sm text-muted">No violations logged yet.</p>
+            </div>
+          ) : (
+            <>
+
           {violations.map((violation) => (
             <div key={violation.id} className="rounded-2xl border border-stone-100 bg-stone-50 px-4 py-3">
               <div className="flex items-center justify-between gap-3">
@@ -111,8 +126,9 @@ export function MonitoringPanel({
               </div>
               <p className="mt-2 text-xs text-muted">{violation.sessionId}</p>
             </div>
-          ))}
-          {violations.length === 0 ? <p className="text-sm text-muted">No violations logged yet.</p> : null}
+            ))}
+            </>
+          )}
         </div>
       </Card>
     </div>
