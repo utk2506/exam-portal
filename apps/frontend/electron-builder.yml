@@ -1,0 +1,41 @@
+appId: com.fresherdrive.examportal
+productName: Fresher Drive 2026
+directories:
+  output: dist_electron
+  buildResources: assets
+files:
+  - dist/**/*
+  - node_modules/**/*
+  - "!node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme,*.{o,a}}"
+  - "!node_modules/.bin"
+  - "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}"
+
+win:
+  target:
+    - nsis
+    - portable
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Fresher Drive 2026
+
+mac:
+  target:
+    - dmg
+    - zip
+  category: public.app-category.education
+  hardenedRuntime: true
+  gatekeeperAssess: false
+
+dmg:
+  contents:
+    - x: 130
+      y: 220
+      type: file
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications

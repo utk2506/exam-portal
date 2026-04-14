@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { MonitoringCandidateRow, ViolationDto } from "@exam-platform/shared";
 
@@ -14,12 +15,16 @@ export function MonitoringPanel({
   violations: ViolationDto[];
 }) {
   const queryClient = useQueryClient();
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
   const deleteMutation = useMutation({
     mutationFn: (sessionId: string) => apiClient.delete(`/admin/monitoring/sessions/${sessionId}`),
     onSuccess: async () => {
+      setConfirmDeleteId(null);
       await queryClient.invalidateQueries({ queryKey: ["monitoring-sessions"] });
       await queryClient.invalidateQueries({ queryKey: ["monitoring-violations"] });
       await queryClient.invalidateQueries({ queryKey: ["overview"] });
+      await queryClient.invalidateQueries({ queryKey: ["exam-analytics"] });
     }
   });
 
@@ -74,18 +79,37 @@ export function MonitoringPanel({
                     )}
                   </td>
                   <td className="py-3">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      disabled={deleteMutation.isPending}
-                      onClick={() => {
-                        if (window.confirm("Delete this candidate session? This allows re-registration.")) {
-                          deleteMutation.mutate(row.session.id);
-                        }
-                      }}
-                    >
-                      Delete
-                    </Button>
+                    {confirmDeleteId === row.session.id ? (
+                      <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2">
+                        <span className="text-xs text-rose-700 font-medium">Delete session?</span>
+                        <Button
+                          type="button"
+                          variant="danger"
+                          disabled={deleteMutation.isPending}
+                          onClick={() => deleteMutation.mutate(row.session.id)}
+                          className="h-7 px-2 text-xs"
+                        >
+                          {deleteMutation.isPending ? "Deleting..." : "Yes"}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => setConfirmDeleteId(null)}
+                          className="h-7 px-2 text-xs"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        disabled={deleteMutation.isPending}
+                        onClick={() => setConfirmDeleteId(row.session.id)}
+                      >
+                        Delete
+                      </Button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -124,7 +148,12 @@ export function MonitoringPanel({
                 />
                 <span className="text-xs text-muted">{new Date(violation.detectedAt).toLocaleString()}</span>
               </div>
-              <p className="mt-2 text-xs text-muted">{violation.sessionId}</p>
+              <div className="mt-2 space-y-1">
+                <p className="text-sm font-medium text-ink">
+                  {(violation.metadata?.candidateName as string) || 'Unknown Candidate'}
+                </p>
+                <p className="text-xs text-muted">{violation.sessionId}</p>
+              </div>
             </div>
             ))}
             </>

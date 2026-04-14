@@ -9,7 +9,7 @@ import { Card } from "../../../components/ui/Card";
 import { QuestionCard } from "../components/QuestionCard";
 import { QuestionNavigator } from "../components/QuestionNavigator";
 import { WatermarkOverlay } from "../components/WatermarkOverlay";
-import { useAntiCheat } from "../hooks/useAntiCheat";
+import { useNotification } from "../../../components/ViolationNotification";
 import { useWebcamProctor } from "../hooks/useWebcamProctor";
 
 interface DraftState {
@@ -27,6 +27,7 @@ function formatTime(totalSeconds: number) {
 export function ExamRuntimePage() {
   const navigate = useNavigate();
   const { sessionId = "" } = useParams();
+  const { addNotification } = useNotification();
   const [currentQuestionId, setCurrentQuestionId] = useState("");
   const [drafts, setDrafts] = useState<Record<string, DraftState>>({});
   const [visited, setVisited] = useState<Set<string>>(new Set());
@@ -188,15 +189,6 @@ export function ExamRuntimePage() {
     return () => window.removeEventListener("pageshow", handlePageShow);
   }, [runtimeQuery]);
 
-
-
-  const antiCheat = useAntiCheat({
-    enabled: runtimeQuery.isSuccess,
-    reportViolation: async (payload) => {
-      await violationMutation.mutateAsync(payload);
-    }
-  });
-
   const webcamProctor = useWebcamProctor({
     enabled: runtimeQuery.isSuccess,
     sessionId
@@ -221,6 +213,233 @@ export function ExamRuntimePage() {
   const currentQuestion =
     questions.find((question) => question.id === currentQuestionId) ?? (questions[0] as CandidateRuntimeQuestion | undefined);
   const currentDraft = currentQuestion ? drafts[currentQuestion.id] : undefined;
+
+  // Track window focus state and violations for tab switching
+  const windowFocusRef = useRef(true);
+  const focusIntervalRef = useRef<number | null>(null);
+
+  // Block text selection, copying, dragging, and log security violations
+  useEffect(() => {
+    const candidateName = runtimeQuery.data?.session.name || 'Unknown Candidate';
+
+    const handleSelectStart = (e: Event) => e.preventDefault();
+
+    const handleCopy = (e: Event) => {
+      e.preventDefault();
+      addNotification({
+        message: 'Copy is disabled during exam',
+        candidateName,
+        type: 'warning',
+      });
+      void violationMutation.mutateAsync({
+        type: 'copy_attempt',
+        severity: 'warning',
+        metadata: { candidateName }
+      });
+    };
+
+    const handleCut = (e: Event) => {
+      e.preventDefault();
+      addNotification({
+        message: 'Cut is disabled during exam',
+        candidateName,
+        type: 'warning',
+      });
+      void violationMutation.mutateAsync({
+        type: 'cut_attempt',
+        severity: 'warning',
+        metadata: { candidateName }
+      });
+    };
+
+    const handlePaste = (e: Event) => {
+      e.preventDefault();
+      addNotification({
+        message: 'Paste is disabled during exam',
+        candidateName,
+        type: 'warning',
+      });
+      void violationMutation.mutateAsync({
+        type: 'paste_attempt',
+        severity: 'warning',
+        metadata: { candidateName }
+      });
+    };
+
+    const handleDrag = (e: Event) => {
+      e.preventDefault();
+      addNotification({
+        message: 'Dragging is disabled during exam',
+        candidateName,
+        type: 'warning',
+      });
+      void violationMutation.mutateAsync({
+        type: 'drag_attempt',
+        severity: 'warning',
+        metadata: { candidateName }
+      });
+    };
+
+    const handleDrop = (e: Event) => {
+      e.preventDefault();
+      addNotification({
+        message: 'Drop is disabled during exam',
+        candidateName,
+        type: 'warning',
+      });
+      void violationMutation.mutateAsync({
+        type: 'drop_attempt',
+        severity: 'warning',
+        metadata: { candidateName }
+      });
+    };
+
+    const handleContextMenu = (e: Event) => {
+      e.preventDefault();
+      addNotification({
+        message: 'Right-click is disabled during exam',
+        candidateName,
+        type: 'warning',
+      });
+      void violationMutation.mutateAsync({
+        type: 'right_click_attempt',
+        severity: 'warning',
+        metadata: { candidateName }
+      });
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Block Alt+Tab (window switching)
+      if (e.altKey && e.key === 'Tab') {
+        e.preventDefault();
+        addNotification({
+          message: 'Window switching (Alt+Tab) is blocked',
+          candidateName,
+          type: 'critical',
+        });
+        void violationMutation.mutateAsync({
+          type: 'window_switch_attempt',
+          severity: 'critical',
+          metadata: { candidateName, shortcut: 'Alt+Tab' }
+        });
+      }
+
+      // Block Tab key alone
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        addNotification({
+          message: 'Tab key is disabled during exam',
+          candidateName,
+          type: 'warning',
+        });
+        void violationMutation.mutateAsync({
+          type: 'tab_key_pressed',
+          severity: 'warning',
+          metadata: { candidateName }
+        });
+      }
+
+      // Block Ctrl+C, Ctrl+X, Ctrl+V, Ctrl+A, Ctrl+S
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === 'c' || e.key === 'C') {
+          e.preventDefault();
+          addNotification({
+            message: 'Copy shortcut (Ctrl+C) is blocked',
+            candidateName,
+            type: 'warning',
+          });
+          void violationMutation.mutateAsync({
+            type: 'keyboard_copy_shortcut',
+            severity: 'warning',
+            metadata: { candidateName, shortcut: 'Ctrl+C' }
+          });
+        } else if (e.key === 'x' || e.key === 'X') {
+          e.preventDefault();
+          addNotification({
+            message: 'Cut shortcut (Ctrl+X) is blocked',
+            candidateName,
+            type: 'warning',
+          });
+          void violationMutation.mutateAsync({
+            type: 'keyboard_cut_shortcut',
+            severity: 'warning',
+            metadata: { candidateName, shortcut: 'Ctrl+X' }
+          });
+        } else if (e.key === 'v' || e.key === 'V') {
+          e.preventDefault();
+          addNotification({
+            message: 'Paste shortcut (Ctrl+V) is blocked',
+            candidateName,
+            type: 'warning',
+          });
+          void violationMutation.mutateAsync({
+            type: 'keyboard_paste_shortcut',
+            severity: 'warning',
+            metadata: { candidateName, shortcut: 'Ctrl+V' }
+          });
+        } else if (e.key === 'a' || e.key === 'A') {
+          e.preventDefault();
+          addNotification({
+            message: 'Select All shortcut (Ctrl+A) is blocked',
+            candidateName,
+            type: 'warning',
+          });
+          void violationMutation.mutateAsync({
+            type: 'keyboard_selectall_shortcut',
+            severity: 'warning',
+            metadata: { candidateName, shortcut: 'Ctrl+A' }
+          });
+        }
+      }
+    };
+
+    const handleFocus = () => {
+      windowFocusRef.current = true;
+      if (focusIntervalRef.current !== null) {
+        window.clearInterval(focusIntervalRef.current);
+        focusIntervalRef.current = null;
+      }
+    };
+
+    const handleBlur = () => {
+      windowFocusRef.current = false;
+      // Start logging violations every 2 seconds when user leaves the window
+      focusIntervalRef.current = window.setInterval(() => {
+        void violationMutation.mutateAsync({
+          type: 'window_left',
+          severity: 'critical',
+          metadata: { candidateName, reason: 'User left exam window' }
+        });
+      }, 2000);
+    };
+
+    document.addEventListener('selectstart', handleSelectStart);
+    document.addEventListener('copy', handleCopy);
+    document.addEventListener('cut', handleCut);
+    document.addEventListener('paste', handlePaste);
+    document.addEventListener('dragstart', handleDrag);
+    document.addEventListener('drop', handleDrop);
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('blur', handleBlur);
+
+    return () => {
+      document.removeEventListener('selectstart', handleSelectStart);
+      document.removeEventListener('copy', handleCopy);
+      document.removeEventListener('cut', handleCut);
+      document.removeEventListener('paste', handlePaste);
+      document.removeEventListener('dragstart', handleDrag);
+      document.removeEventListener('drop', handleDrop);
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('blur', handleBlur);
+      if (focusIntervalRef.current !== null) {
+        window.clearInterval(focusIntervalRef.current);
+      }
+    };
+  }, [runtimeQuery.data?.session.name, violationMutation]);
 
   // Auto-enter fullscreen as soon as exam runtime is ready
   useEffect(() => {
@@ -253,7 +472,7 @@ export function ExamRuntimePage() {
   const isLowTime = timeRemaining !== null && timeRemaining > 0 && timeRemaining < 300;
 
   return (
-    <main className="min-h-screen px-4 py-4 md:px-6">
+    <main className="min-h-screen w-full select-none px-2 sm:px-4 md:px-6 lg:px-8" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <WatermarkOverlay
         candidateName={runtime.session.name}
         candidateId={runtime.session.candidateId}
@@ -264,15 +483,10 @@ export function ExamRuntimePage() {
       <video ref={webcamProctor.videoRef} className="sr-only" muted playsInline />
       <canvas ref={webcamProctor.canvasRef} className="sr-only" />
 
-      {antiCheat.warningMessage ? (
-        <div className="fixed left-1/2 top-4 z-50 -translate-x-1/2 rounded-2xl bg-rose-600 px-4 py-3 text-sm font-medium text-white shadow-lg">
-          {antiCheat.warningMessage}
-        </div>
-      ) : null}
 
-      <div className="mx-auto grid max-w-[1500px] gap-4 xl:grid-cols-[1fr,360px]">
-        <div className="space-y-4">
-          <Card className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex w-full flex-col gap-4 lg:grid lg:grid-cols-[2fr,360px]" style={{ maxWidth: '95vw' }}>
+        <div className="space-y-4 lg:flex lg:flex-col lg:items-stretch">
+          <Card className="sticky top-0 z-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Candidate</p>
               <h1 className="font-display text-3xl text-ink">{runtime.session.name}</h1>
@@ -410,7 +624,7 @@ export function ExamRuntimePage() {
           </Card>
         </div>
 
-        <Card className="space-y-4">
+        <Card className="space-y-4 h-fit sticky top-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Question Navigator</p>
             <h2 className="font-display text-3xl text-ink">Progress Map</h2>
