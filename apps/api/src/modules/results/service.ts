@@ -151,26 +151,41 @@ export async function gradeSubjectiveAnswer({
     throw new AppError("Subjective question not found", 404);
   }
 
-  await prisma.subjectiveScore.upsert({
-    where: {
-      sessionId_questionId: {
+  // Update both SubjectiveScore and Response tables
+  await prisma.$transaction([
+    prisma.subjectiveScore.upsert({
+      where: {
+        sessionId_questionId: {
+          sessionId,
+          questionId
+        }
+      },
+      update: {
+        awardedMarks,
+        remarks: remarks ?? null,
+        evaluatorAdminId
+      },
+      create: {
         sessionId,
-        questionId
+        questionId,
+        evaluatorAdminId,
+        awardedMarks,
+        remarks: remarks ?? null
       }
-    },
-    update: {
-      awardedMarks,
-      remarks: remarks ?? null,
-      evaluatorAdminId
-    },
-    create: {
-      sessionId,
-      questionId,
-      evaluatorAdminId,
-      awardedMarks,
-      remarks: remarks ?? null
-    }
-  });
+    }),
+    prisma.response.update({
+      where: {
+        sessionId_questionId: {
+          sessionId,
+          questionId
+        }
+      },
+      data: {
+        awardedMarks,
+        reviewRemarks: remarks ?? null
+      }
+    })
+  ]);
 
   emitRealtimeEvent("grading.updated", { sessionId });
   return syncResultForSession(sessionId);
@@ -218,7 +233,18 @@ export async function listResultsExportRows(examId?: string) {
   return prisma.candidateSession.findMany({
     where: examId ? { examId } : undefined,
     include: {
-      exam: true,
+      exam: {
+        include: {
+          questions: {
+            orderBy: { sortOrder: "asc" }
+          }
+        }
+      },
+      responses: {
+        include: {
+          question: true
+        }
+      },
       result: true
     },
     orderBy: {

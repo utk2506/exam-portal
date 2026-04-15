@@ -1,4 +1,5 @@
 @echo off
+setlocal enabledelayedexpansion
 title Exam Portal - Server Launcher
 color 0A
 
@@ -13,18 +14,28 @@ cd /d "%~dp0"
 :: Read ENABLE_AI_PROCTORING from .env
 :: -----------------------------------------------
 set "AI_PROCTORING=false"
-for /f "usebackq tokens=1,* delims==" %%A in (".env") do (
-    if /i "%%A"=="ENABLE_AI_PROCTORING" set "AI_PROCTORING=%%B"
+if exist ".env" (
+    for /f "tokens=1,2 delims==" %%A in (.env) do (
+        if "%%A"=="ENABLE_AI_PROCTORING" (
+            set "AI_PROCTORING=%%B"
+        )
+    )
 )
+
+:: Trim whitespace from AI_PROCTORING value
+for /f "tokens=*" %%A in ("!AI_PROCTORING!") do set "AI_PROCTORING=%%A"
+
+echo Debug: ENABLE_AI_PROCTORING = !AI_PROCTORING!
+echo.
 
 echo [1/4] Checking PostgreSQL connection...
 where pg_isready >nul 2>&1
 if %errorlevel%==0 (
     pg_isready -h localhost -p 5432 >nul 2>&1
     if %errorlevel%==0 (
-        echo       PostgreSQL is running.
+        echo       ✓ PostgreSQL is running.
     ) else (
-        echo       WARNING: PostgreSQL may not be running on port 5432.
+        echo       ✗ WARNING: PostgreSQL may not be running on port 5432.
         echo       Make sure PostgreSQL is started before continuing.
         pause
     )
@@ -35,40 +46,52 @@ if %errorlevel%==0 (
 echo.
 
 echo [2/4] Starting Backend API (port 8080)...
-start "Exam Portal - API" cmd /k "cd /d "%~dp0" && npm run dev:api"
-echo       API server starting...
+start "Exam Portal - API" cmd /k "cd /d "%~dp0" && npm run dev:api || pause"
+echo       ✓ API server starting...
+timeout /t 3 /nobreak >nul
 echo.
 
-:: Wait a moment for API to initialize
-timeout /t 3 /nobreak >nul
-
 echo [3/4] Starting Frontend (port 4173)...
-start "Exam Portal - Frontend" cmd /k "cd /d "%~dp0" && npm run dev:frontend"
-echo       Frontend server starting...
+start "Exam Portal - Frontend" cmd /k "cd /d "%~dp0" && npm run dev:frontend || pause"
+echo       ✓ Frontend server starting...
+timeout /t 3 /nobreak >nul
 echo.
 
 :: -----------------------------------------------
 :: Start AI Proctor if enabled
 :: -----------------------------------------------
-if /i "%AI_PROCTORING%"=="true" (
-    echo [4/4] AI Proctoring is ENABLED - Starting AI Proctor (port 8090)...
-    start "Exam Portal - AI Proctor" cmd /k "cd /d "%~dp0%services\ai-proctor" && python -m uvicorn app:app --host 0.0.0.0 --port 8090"
-    echo       AI Proctor service starting...
+if /i "!AI_PROCTORING!"=="true" (
+    echo [4/4] AI Proctoring is ENABLED - Starting AI Proctor (port 8091)...
+    if exist "%~dp0start-ai-proctor.bat" (
+        echo       Launching AI Proctor service...
+        start "Exam Portal - AI Proctor" cmd /k "call "%~dp0start-ai-proctor.bat""
+        echo       ✓ AI Proctor service starting on port 8091...
+        timeout /t 3 /nobreak >nul
+    ) else (
+        echo       ✗ ERROR: start-ai-proctor.bat not found!
+        echo       Please make sure start-ai-proctor.bat is in the root directory.
+    )
 ) else (
     echo [4/4] AI Proctoring is DISABLED - Skipping AI Proctor.
+    echo       To enable, edit .env and set: ENABLE_AI_PROCTORING=true
 )
 echo.
 
 echo ============================================
-echo  All servers launched!
+echo  All servers launched successfully!
 echo.
 echo  Frontend : http://localhost:4173
 echo  API      : http://localhost:8080
-if /i "%AI_PROCTORING%"=="true" (
-    echo  AI Proctor: http://localhost:8090
+if /i "!AI_PROCTORING!"=="true" (
+    echo  AI Proctor: http://localhost:8091 (optional, for proctoring)
 )
 echo  Admin    : http://localhost:4173/admin
 echo.
-echo  Close this window or press any key to exit.
+echo  Log output appears in separate windows.
+echo  Close those windows to stop the servers.
+echo.
+echo  This launcher window will stay open.
+echo  You can close this window anytime to view the other windows.
 echo ============================================
-pause >nul
+REM Launcher window stays open - user can close it manually
+pause

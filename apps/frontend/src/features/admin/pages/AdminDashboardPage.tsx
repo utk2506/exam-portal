@@ -14,11 +14,13 @@ import type {
 import { apiClient, API_BASE } from "../../../api/client";
 import { Button } from "../../../components/ui/Button";
 import { Card } from "../../../components/ui/Card";
+import { Logo } from "../../../components/ui/Logo";
 import { ExamManager } from "../components/ExamManager";
 import { ExamAnalyticsPanel } from "../components/ExamAnalyticsPanel";
 import { MonitoringPanel } from "../components/MonitoringPanel";
 import { OverviewCards } from "../components/OverviewCards";
 import { PendingReviewsPanel } from "../components/PendingReviewsPanel";
+import { ResultsPanel } from "../components/ResultsPanel";
 
 export function AdminDashboardPage() {
   const navigate = useNavigate();
@@ -123,7 +125,7 @@ export function AdminDashboardPage() {
       <div className="mx-auto max-w-[1600px] space-y-6">
         <Card className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">Office LAN Exam Platform</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">Chimera Fresher's Drive 2026</p>
             <h1 className="font-display text-4xl text-ink">
               Welcome back, {meQuery.data?.admin.displayName ?? "Admin"}
             </h1>
@@ -151,6 +153,14 @@ export function AdminDashboardPage() {
         <ExamManager exams={exams} selectedExamId={selectedExamId} onSelectExam={setSelectedExamId} />
 
         {selectedExamId ? <ExamAnalyticsPanel examId={selectedExamId} /> : null}
+
+        {selectedExamId ? (
+          <ResultsPanel
+            examId={selectedExamId}
+            sessions={monitoringQuery.data?.sessions ?? []}
+            exam={exams.find((e) => e.id === selectedExamId)}
+          />
+        ) : null}
 
         <MonitoringPanel
           sessions={monitoringQuery.data?.sessions ?? []}

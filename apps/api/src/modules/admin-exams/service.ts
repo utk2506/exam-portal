@@ -240,8 +240,35 @@ export async function updateQuestion(questionId: string, payload: Record<string,
 }
 
 export async function deleteQuestion(questionId: string) {
-  await prisma.question.delete({
+  // Get the question to find its exam
+  const question = await prisma.question.findUnique({
     where: { id: questionId }
+  });
+
+  if (!question) {
+    throw new AppError("Question not found", 404);
+  }
+
+  // Delete and renumber in a transaction
+  await prisma.$transaction(async (tx) => {
+    // Delete the question
+    await tx.question.delete({
+      where: { id: questionId }
+    });
+
+    // Get all remaining questions ordered by sortOrder
+    const remainingQuestions = await tx.question.findMany({
+      where: { examId: question.examId },
+      orderBy: { sortOrder: "asc" }
+    });
+
+    // Renumber them sequentially
+    for (let i = 0; i < remainingQuestions.length; i++) {
+      await tx.question.update({
+        where: { id: remainingQuestions[i].id },
+        data: { sortOrder: i + 1 }
+      });
+    }
   });
 }
 

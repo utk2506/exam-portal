@@ -87,15 +87,12 @@ export function ExamManager({
   // Scroll to edit form when editing starts
   useEffect(() => {
     if (editingQuestion) {
+      // Wait for form to render, then scroll
       setTimeout(() => {
         const element = document.getElementById("question-composer");
         if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "start" });
-          // Focus on the first input for better UX
-          const firstInput = element.querySelector("input, textarea, select");
-          if (firstInput instanceof HTMLElement) {
-            firstInput.focus();
-          }
+          // Scroll to center the form on screen for better visibility
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
         }
       }, 100);
     }
@@ -192,12 +189,12 @@ export function ExamManager({
                   variant="secondary"
                   onClick={() =>
                     window.open(
-                      `${API_BASE}/admin/results/export?examId=${encodeURIComponent(selectedExam.id)}`,
+                      `${API_BASE}/admin/results/export?examId=${encodeURIComponent(selectedExam.id)}&format=excel`,
                       "_blank"
                     )
                   }
                 >
-                  Export Results
+                  Export Results (Excel)
                 </Button>
                 <Button
                   type="button"
@@ -348,6 +345,7 @@ export function ExamManager({
 
         {selectedExam ? (
           <QuestionComposer
+            key={selectedExam.id}
             examId={selectedExam.id}
             editingQuestion={editingQuestion}
             onCancelEdit={() => setEditingQuestion(null)}

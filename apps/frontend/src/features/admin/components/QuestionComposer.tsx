@@ -34,16 +34,21 @@ export function QuestionComposer({
   // Pre-fill form when editing a question
   useEffect(() => {
     if (editingQuestion) {
-      setType(editingQuestion.type);
-      setPromptHtml(editingQuestion.promptHtml);
-      setOptionAHtml(editingQuestion.optionAHtml ?? "<p>Option A</p>");
-      setOptionBHtml(editingQuestion.optionBHtml ?? "<p>Option B</p>");
-      setOptionCHtml(editingQuestion.optionCHtml ?? "<p>Option C</p>");
-      setOptionDHtml(editingQuestion.optionDHtml ?? "<p>Option D</p>");
-      setCorrectOption(editingQuestion.correctOption ?? "A");
-      setMarks(editingQuestion.marks);
-      setSortOrder(editingQuestion.sortOrder);
-      setAssetUrl(editingQuestion.assetUrl ?? "");
+      // Ensure type is properly set
+      setType((editingQuestion.type as "mcq" | "subjective") || "mcq");
+      // Populate all fields with proper fallbacks
+      setPromptHtml(editingQuestion.promptHtml || "<p></p>");
+      setOptionAHtml(editingQuestion.optionAHtml || "<p>Option A</p>");
+      setOptionBHtml(editingQuestion.optionBHtml || "<p>Option B</p>");
+      setOptionCHtml(editingQuestion.optionCHtml || "<p>Option C</p>");
+      setOptionDHtml(editingQuestion.optionDHtml || "<p>Option D</p>");
+      setCorrectOption(editingQuestion.correctOption || "A");
+      setMarks(Number(editingQuestion.marks) || 4);
+      setSortOrder(Number(editingQuestion.sortOrder) || 1);
+      setAssetUrl(editingQuestion.assetUrl || "");
+    } else {
+      // Reset form when not editing
+      resetForm();
     }
   }, [editingQuestion]);
 

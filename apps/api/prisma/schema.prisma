@@ -130,6 +130,8 @@ model Response {
   questionId           String
   selectedOption       McqOption?
   subjectiveAnswerHtml String?          @db.Text
+  awardedMarks         Int              @default(0)
+  reviewRemarks        String?          @db.Text
   savedAt              DateTime         @default(now())
   finalSubmitted       Boolean          @default(false)
   createdAt            DateTime         @default(now())

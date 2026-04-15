@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import Placeholder from "@tiptap/extension-placeholder";
 import StarterKit from "@tiptap/starter-kit";
@@ -29,6 +30,17 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
       onChange(editor.getHTML());
     }
   });
+
+  // Update editor content when value prop changes (e.g., when loading a question for editing)
+  useEffect(() => {
+    if (editor && value) {
+      const currentContent = editor.getHTML();
+      // Only update if content is different to avoid unnecessary updates
+      if (currentContent !== value) {
+        editor.commands.setContent(value);
+      }
+    }
+  }, [editor, value]);
 
   return (
     <div className="space-y-2">

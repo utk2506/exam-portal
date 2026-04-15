@@ -1,4 +1,4 @@
-# Office LAN Exam Platform
+# Chimera Fresher's Drive 2026
 
 LAN-only computer-based test platform for office deployments. The repo is structured as a greenfield `npm` workspace with a React frontend, Express + Prisma backend, shared TypeScript contracts, and an optional Python AI proctor service.
 
