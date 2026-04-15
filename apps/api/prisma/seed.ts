@@ -1,21 +1,34 @@
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const password = bcrypt.hashSync("Chimera@2k24$",10);
-
-  await prisma.admin.upsert({
+  const adminExists = await prisma.admin.findUnique({
     where: { username: "admin" },
-    update: {},
-    create: {
-      id: "1",
-      username: "admin",
-      passwordHash: password,
-      displayName: "Administrator"
-    }
   });
+
+  if (!adminExists) {
+    const passwordHash = await bcrypt.hash("Chimera@2k24$", 10);
+
+    await prisma.admin.create({
+      data: {
+        id: "1",
+        username: "admin",
+        passwordHash,
+        displayName: "Administrator",
+      },
+    });
+
+    console.log("✅ Admin user created");
+  } else {
+    console.log("Admin already exists");
+  }
 }
 
-main();
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(() => prisma.$disconnect());
