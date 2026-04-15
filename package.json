@@ -25,6 +25,9 @@
     "typescript": "^5.6.3"
   },
   "prisma": {
-  "seed": "ts-node apps/api/prisma/seed.ts"
-}
+    "seed": "tsx apps/api/prisma/seed.ts"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0"
+  }
 }
