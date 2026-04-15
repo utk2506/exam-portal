@@ -1,4 +1,4 @@
-import ChimeraLogoImg from "../../assets/Chimera-logo.png";
+import ChimeraLogoImg from "../../assets/chimera-logo.png";
 
 export function ChimeraLogo({ size = "lg" }: { size?: "sm" | "md" | "lg" }) {
   const sizeMap = {

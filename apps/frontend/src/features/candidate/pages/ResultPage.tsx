@@ -78,7 +78,6 @@ function QrCodeCard() {
         <QrImage
           url={INSTAGRAM_URL}
           alt="Instagram QR Code"
-          delayMs={600}
           logo={
             <>
               <svg className="h-4 w-4 text-[#E1306C]" fill="currentColor" viewBox="0 0 24 24">
