@@ -58,10 +58,26 @@ export function QuestionImportPanel({ examId }: { examId: string }) {
   return (
     <div className="grid gap-4 xl:grid-cols-2">
       <Card className="space-y-4">
-        <div>
-          <h3 className="font-display text-2xl text-ink">Bulk Import</h3>
-          <p className="text-sm text-muted">Replace the exam question bank with a validated spreadsheet and optional ZIP of assets.</p>
-        </div>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h3 className="font-display text-2xl text-ink">Bulk Import</h3>
+              <p className="text-sm text-muted">Replace the exam question bank with a validated spreadsheet and optional ZIP of assets.</p>
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                const link = document.createElement('a');
+                link.href = '/question_upload_template.xlsx';
+                link.setAttribute('download', 'question_upload_template.xlsx');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+              }}
+            >
+              Download Excel Template
+            </Button>
+          </div>
 
         <form className="space-y-4" onSubmit={handleImport}>
           <label className="block space-y-2 text-sm">

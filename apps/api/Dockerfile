@@ -34,4 +34,4 @@ RUN mkdir -p /app/apps/api/uploads
 
 EXPOSE 8080
 
-CMD ["npm", "run", "start", "-w", "@exam-platform/api"]
+CMD npx prisma migrate deploy --schema=apps/api/prisma/schema.prisma && npm run start -w @exam-platform/api

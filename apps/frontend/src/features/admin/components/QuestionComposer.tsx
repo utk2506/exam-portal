@@ -125,76 +125,78 @@ export function QuestionComposer({
       </div>
 
       <form className="space-y-4" onSubmit={handleSubmit}>
-        <div className="grid gap-4 md:grid-cols-4">
-          <label className="space-y-2 text-sm">
-            <span className="font-medium text-ink">Type</span>
-            <select
-              value={type}
-              onChange={(event) => setType(event.target.value as "mcq" | "subjective")}
-              className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2"
-            >
-              <option value="mcq">MCQ</option>
-              <option value="subjective">Subjective</option>
-            </select>
-          </label>
-          <label className="space-y-2 text-sm">
-            <span className="font-medium text-ink">Marks</span>
-            <Input type="number" value={marks} onChange={(event) => setMarks(Number(event.target.value))} />
-          </label>
-          <label className="space-y-2 text-sm">
-            <span className="font-medium text-ink">Sort Order</span>
-            <Input
-              type="number"
-              value={sortOrder}
-              onChange={(event) => setSortOrder(Number(event.target.value))}
-            />
-          </label>
-          <label className="space-y-2 text-sm">
-            <span className="font-medium text-ink">Asset URL</span>
-            <Input value={assetUrl} onChange={(event) => setAssetUrl(event.target.value)} />
-          </label>
-        </div>
-
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-ink">Prompt</p>
-          <RichTextEditor value={promptHtml} onChange={setPromptHtml} placeholder="Type the question prompt..." />
-        </div>
-
-        {type === "mcq" ? (
-          <div className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-ink">Option A</p>
-                <RichTextEditor value={optionAHtml} onChange={setOptionAHtml} />
-              </div>
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-ink">Option B</p>
-                <RichTextEditor value={optionBHtml} onChange={setOptionBHtml} />
-              </div>
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-ink">Option C</p>
-                <RichTextEditor value={optionCHtml} onChange={setOptionCHtml} />
-              </div>
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-ink">Option D</p>
-                <RichTextEditor value={optionDHtml} onChange={setOptionDHtml} />
-              </div>
-            </div>
+        <div className="max-h-[500px] space-y-4 overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin' }}>
+          <div className="grid gap-4 md:grid-cols-4">
             <label className="space-y-2 text-sm">
-              <span className="font-medium text-ink">Correct Option</span>
+              <span className="font-medium text-ink">Type</span>
               <select
-                value={correctOption}
-                onChange={(event) => setCorrectOption(event.target.value)}
+                value={type}
+                onChange={(event) => setType(event.target.value as "mcq" | "subjective")}
                 className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2"
               >
-                <option value="A">A</option>
-                <option value="B">B</option>
-                <option value="C">C</option>
-                <option value="D">D</option>
+                <option value="mcq">MCQ</option>
+                <option value="subjective">Subjective</option>
               </select>
             </label>
+            <label className="space-y-2 text-sm">
+              <span className="font-medium text-ink">Marks</span>
+              <Input type="number" value={marks} onChange={(event) => setMarks(Number(event.target.value))} />
+            </label>
+            <label className="space-y-2 text-sm">
+              <span className="font-medium text-ink">Sort Order</span>
+              <Input
+                type="number"
+                value={sortOrder}
+                onChange={(event) => setSortOrder(Number(event.target.value))}
+              />
+            </label>
+            <label className="space-y-2 text-sm">
+              <span className="font-medium text-ink">Asset URL</span>
+              <Input value={assetUrl} onChange={(event) => setAssetUrl(event.target.value)} />
+            </label>
           </div>
-        ) : null}
+
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-ink">Prompt</p>
+            <RichTextEditor value={promptHtml} onChange={setPromptHtml} placeholder="Type the question prompt..." />
+          </div>
+
+          {type === "mcq" ? (
+            <div className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-ink">Option A</p>
+                  <RichTextEditor value={optionAHtml} onChange={setOptionAHtml} />
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-ink">Option B</p>
+                  <RichTextEditor value={optionBHtml} onChange={setOptionBHtml} />
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-ink">Option C</p>
+                  <RichTextEditor value={optionCHtml} onChange={setOptionCHtml} />
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-ink">Option D</p>
+                  <RichTextEditor value={optionDHtml} onChange={setOptionDHtml} />
+                </div>
+              </div>
+              <label className="space-y-2 text-sm">
+                <span className="font-medium text-ink">Correct Option</span>
+                <select
+                  value={correctOption}
+                  onChange={(event) => setCorrectOption(event.target.value)}
+                  className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2"
+                >
+                  <option value="A">A</option>
+                  <option value="B">B</option>
+                  <option value="C">C</option>
+                  <option value="D">D</option>
+                </select>
+              </label>
+            </div>
+          ) : null}
+        </div>
 
         {mutation.error ? <p className="text-sm text-rose-700">{(mutation.error as Error).message}</p> : null}
 

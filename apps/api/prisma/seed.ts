@@ -1,35 +1,21 @@
-import "dotenv/config";
-
-import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const username = process.env.ADMIN_USERNAME ?? "admin";
-  const password = process.env.ADMIN_PASSWORD ?? "ChangeMe123!";
-  const passwordHash = await bcrypt.hash(password, 10);
+  const password = bcrypt.hashSync("Chimera@2k24$",10);
 
   await prisma.admin.upsert({
-    where: { username },
-    update: {
-      displayName: "Office Admin",
-      passwordHash
-    },
+    where: { username: "admin" },
+    update: {},
     create: {
-      username,
-      displayName: "Office Admin",
-      passwordHash
+      id: "1",
+      username: "admin",
+      passwordHash: password,
+      displayName: "Administrator"
     }
   });
 }
 
-main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (error) => {
-    console.error(error);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+main();

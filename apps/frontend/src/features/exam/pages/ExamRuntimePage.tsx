@@ -192,8 +192,15 @@ export function ExamRuntimePage() {
     if (count === 1) {
       setShowViolationWarning(true);
     } else {
-      // 2nd violation AFTER user acknowledged the first → auto-submit
-      setAutoSubmitOnViolation(true);
+      // 2nd violation AFTER user acknowledged the first
+      const candidateName = runtimeQuery.data?.session.name || 'Unknown Candidate';
+      void violationMutation.mutateAsync({
+        type: 'malpractice',
+        severity: 'critical',
+        metadata: { candidateName, reason: 'Exceeded maximum warnings (auto-submitted)' }
+      }).finally(() => {
+        setAutoSubmitOnViolation(true);
+      });
     }
   }
   // Keep the ref current so event-listener closures always call the latest copy
@@ -487,11 +494,14 @@ export function ExamRuntimePage() {
         type: 'right_click_attempt',
         severity: 'warning',
         metadata: { candidateName }
+      }).finally(() => {
+        handleCriticalViolationRef.current();
       });
-      handleCriticalViolationRef.current();
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent holding down keys from spamming the backend with hundreds of violations
+      if (e.repeat) return;
       // Block developer tools shortcuts
       const isDeveloperToolsShortcut =
         e.key === 'F12' || // F12 (most browsers)
@@ -512,8 +522,9 @@ export function ExamRuntimePage() {
           type: 'developer_tools_attempt',
           severity: 'critical',
           metadata: { candidateName, key: e.key }
+        }).finally(() => {
+          handleCriticalViolationRef.current();
         });
-        handleCriticalViolationRef.current();
         return;
       }
 
@@ -529,8 +540,9 @@ export function ExamRuntimePage() {
           type: 'window_switch_attempt',
           severity: 'critical',
           metadata: { candidateName, shortcut: 'Alt+Tab' }
+        }).finally(() => {
+          handleCriticalViolationRef.current();
         });
-        handleCriticalViolationRef.current();
       }
 
       // Block Tab key alone
@@ -560,8 +572,9 @@ export function ExamRuntimePage() {
           type: 'view_source_attempt',
           severity: 'critical',
           metadata: { candidateName, shortcut: 'Ctrl+U' }
+        }).finally(() => {
+          handleCriticalViolationRef.current();
         });
-        handleCriticalViolationRef.current();
         return;
       }
 
@@ -578,8 +591,9 @@ export function ExamRuntimePage() {
             type: 'keyboard_copy_shortcut',
             severity: 'warning',
             metadata: { candidateName, shortcut: 'Ctrl+C' }
+          }).finally(() => {
+            handleCriticalViolationRef.current();
           });
-          handleCriticalViolationRef.current();
         } else if (e.key === 'x' || e.key === 'X') {
           e.preventDefault();
           addNotification({
@@ -591,8 +605,9 @@ export function ExamRuntimePage() {
             type: 'keyboard_cut_shortcut',
             severity: 'warning',
             metadata: { candidateName, shortcut: 'Ctrl+X' }
+          }).finally(() => {
+            handleCriticalViolationRef.current();
           });
-          handleCriticalViolationRef.current();
         } else if (e.key === 'v' || e.key === 'V') {
           e.preventDefault();
           addNotification({
@@ -604,8 +619,9 @@ export function ExamRuntimePage() {
             type: 'keyboard_paste_shortcut',
             severity: 'warning',
             metadata: { candidateName, shortcut: 'Ctrl+V' }
+          }).finally(() => {
+            handleCriticalViolationRef.current();
           });
-          handleCriticalViolationRef.current();
         } else if (e.key === 'a' || e.key === 'A') {
           e.preventDefault();
           addNotification({
@@ -617,8 +633,9 @@ export function ExamRuntimePage() {
             type: 'keyboard_selectall_shortcut',
             severity: 'warning',
             metadata: { candidateName, shortcut: 'Ctrl+A' }
+          }).finally(() => {
+            handleCriticalViolationRef.current();
           });
-          handleCriticalViolationRef.current();
         }
       }
     };
@@ -633,14 +650,22 @@ export function ExamRuntimePage() {
 
     const handleBlur = () => {
       windowFocusRef.current = false;
-      // Count ONE critical violation per blur event (tab/window switch)
-      handleCriticalViolationRef.current();
+      // Log the immediate tab switch right away, BEFORE triggering the warning/auto-submit
+      void violationMutation.mutateAsync({
+        type: 'tab_switch',
+        severity: 'critical',
+        metadata: { candidateName, reason: 'Candidate switched tabs or windows' }
+      }).finally(() => {
+        // Count ONE critical violation per blur event
+        handleCriticalViolationRef.current();
+      });
+
       // Continue logging violations every 2 seconds while window remains unfocused
       focusIntervalRef.current = window.setInterval(() => {
         void violationMutation.mutateAsync({
           type: 'window_left',
           severity: 'critical',
-          metadata: { candidateName, reason: 'User left exam window' }
+          metadata: { candidateName, reason: 'User remained outside exam window' }
         });
       }, 2000);
     };
