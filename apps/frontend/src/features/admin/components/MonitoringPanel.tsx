@@ -148,12 +148,7 @@ export function MonitoringPanel({
                 />
                 <span className="text-xs text-muted">{new Date(violation.detectedAt).toLocaleString()}</span>
               </div>
-              <div className="mt-2 space-y-1">
-                <p className="text-sm font-medium text-ink">
-                  {(violation.metadata?.candidateName as string) || 'Unknown Candidate'}
-                </p>
-                <p className="text-xs text-muted">{violation.sessionId}</p>
-              </div>
+              <p className="mt-2 text-xs text-muted">{violation.sessionId}</p>
             </div>
             ))}
             </>

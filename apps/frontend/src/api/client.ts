@@ -4,6 +4,15 @@ type RequestOptions = RequestInit & {
   bodyJson?: unknown;
 };
 
+// Custom error class that carries the HTTP status code so route guards can
+// redirect precisely (e.g. 404 → /exam, 409 already-submitted → /result).
+export class ApiError extends Error {
+  constructor(message: string, public readonly status: number) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     credentials: "include",
@@ -26,7 +35,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       // ignore parse failures and keep the raw text fallback
     }
 
-    throw new Error(message);
+    throw new ApiError(message, response.status);
   }
 
   if (response.status === 204) {

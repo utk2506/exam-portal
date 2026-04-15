@@ -84,24 +84,40 @@ export async function getExamAnalytics(examId: string) {
     status: exam.status,
     submittedCount: completedSessions.length,
     averageScore,
+    totalMarks: exam.totalMarks,
     questionStats: exam.questions.map((question) => {
       const responses = completedSessions
         .map((session) => session.responses.find((response) => response.questionId === question.id))
         .filter(Boolean);
 
-      const correctCount =
-        question.type === "mcq"
-          ? responses.filter((response) => response?.selectedOption === question.correctOption).length
-          : 0;
-
-      return {
-        questionId: question.id,
-        type: question.type,
-        sortOrder: question.sortOrder,
-        attempts: responses.length,
-        correctCount,
-        accuracy: question.type === "mcq" && responses.length > 0 ? correctCount / responses.length : null
-      };
+      if (question.type === "mcq") {
+        const correctCount = responses.filter((response) => response?.selectedOption === question.correctOption).length;
+        return {
+          questionId: question.id,
+          type: question.type,
+          sortOrder: question.sortOrder,
+          marks: question.marks,
+          attempts: responses.length,
+          correctCount,
+          accuracy: responses.length > 0 ? correctCount / responses.length : null,
+          marksAwarded: correctCount * question.marks // MCQ: full marks if correct
+        };
+      } else {
+        // Subjective: track awarded marks
+        const totalMarksAwarded = responses.reduce((sum, response) => sum + (response?.awardedMarks ?? 0), 0);
+        const avgMarksAwarded = responses.length > 0 ? totalMarksAwarded / responses.length : 0;
+        return {
+          questionId: question.id,
+          type: question.type,
+          sortOrder: question.sortOrder,
+          marks: question.marks,
+          attempts: responses.length,
+          correctCount: 0,
+          accuracy: null,
+          averageMarksAwarded: avgMarksAwarded,
+          totalMarksAwarded
+        };
+      }
     })
   };
 }

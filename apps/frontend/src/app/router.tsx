@@ -31,6 +31,11 @@ const ResultPage = lazy(() =>
     default: module.ResultPage
   }))
 );
+const AccessDeniedPage = lazy(() =>
+  import("../features/candidate/pages/AccessDeniedPage").then((module) => ({
+    default: module.AccessDeniedPage
+  }))
+);
 
 export function AppRouter() {
   return (
@@ -44,6 +49,9 @@ export function AppRouter() {
           <Route path="/exam/:sessionId/result" element={<ResultPage />} />
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/admin" element={<AdminDashboardPage />} />
+          <Route path="/access-denied" element={<AccessDeniedPage />} />
+          {/* Catch-all: any unknown URL → access denied page */}
+          <Route path="*" element={<AccessDeniedPage />} />
         </Routes>
       </Suspense>
     </BrowserRouter>

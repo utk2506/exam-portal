@@ -13,8 +13,9 @@ const createWindow = () => {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'electron-preload.js'),
+      preload: path.join(__dirname, 'electron-preload.ts'),
       sandbox: true,
+      devTools: false, // Disable devTools at window level
     },
     icon: path.join(__dirname, '../assets/icon.png'),
   });
@@ -26,16 +27,52 @@ const createWindow = () => {
 
   mainWindow.loadURL(startUrl);
 
-  // Open DevTools in development
+  // Open DevTools in development only
   if (isDev) {
     mainWindow.webContents.openDevTools();
   }
+
+  // Prevent opening DevTools via keyboard in production
+  if (!isDev) {
+    mainWindow.webContents.on('before-input-event', (event, input) => {
+      // Block F12
+      if (input.key.toLowerCase() === 'f12') {
+        event.preventDefault();
+      }
+      // Block Ctrl+Shift+I (Inspector)
+      if (input.control && input.shift && input.key.toLowerCase() === 'i') {
+        event.preventDefault();
+      }
+      // Block Ctrl+Shift+J (Console)
+      if (input.control && input.shift && input.key.toLowerCase() === 'j') {
+        event.preventDefault();
+      }
+      // Block Ctrl+Shift+C (Element Inspector)
+      if (input.control && input.shift && input.key.toLowerCase() === 'c') {
+        event.preventDefault();
+      }
+      // Block Ctrl+Shift+K (Console Firefox)
+      if (input.control && input.shift && input.key.toLowerCase() === 'k') {
+        event.preventDefault();
+      }
+    });
+  }
+
+  // Disable right-click context menu
+  mainWindow.webContents.on('context-menu', (e) => {
+    e.preventDefault();
+  });
 
   // Disable file drag-drop
   mainWindow.webContents.on('will-navigate', (event, url) => {
     if (!url.startsWith('http://localhost') && !url.startsWith('file://')) {
       event.preventDefault();
     }
+  });
+
+  // Prevent opening new windows
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    return { action: 'deny' };
   });
 
   mainWindow.on('closed', () => {
@@ -57,33 +94,35 @@ app.on('activate', () => {
   }
 });
 
-// Create menu
-const template: Electron.MenuItemConstructorOptions[] = [
-  {
-    label: 'File',
-    submenu: [
+// Create menu - disable in production for security
+const template: Electron.MenuItemConstructorOptions[] = isDev
+  ? [
       {
-        label: 'Exit',
-        accelerator: 'CmdOrCtrl+Q',
-        click: () => app.quit(),
+        label: 'File',
+        submenu: [
+          {
+            label: 'Exit',
+            accelerator: 'CmdOrCtrl+Q',
+            click: () => app.quit(),
+          },
+        ],
       },
-    ],
-  },
-  {
-    label: 'Edit',
-    submenu: [
-      { label: 'Undo', accelerator: 'CmdOrCtrl+Z', role: 'undo' },
-      { label: 'Redo', accelerator: 'Shift+CmdOrCtrl+Z', role: 'redo' },
-    ],
-  },
-  {
-    label: 'View',
-    submenu: [
-      { label: 'Reload', accelerator: 'CmdOrCtrl+R', role: 'reload' },
-      { label: 'Toggle DevTools', accelerator: 'F12', role: 'toggleDevTools' },
-    ],
-  },
-];
+      {
+        label: 'Edit',
+        submenu: [
+          { label: 'Undo', accelerator: 'CmdOrCtrl+Z', role: 'undo' },
+          { label: 'Redo', accelerator: 'Shift+CmdOrCtrl+Z', role: 'redo' },
+        ],
+      },
+      {
+        label: 'View',
+        submenu: [
+          { label: 'Reload', accelerator: 'CmdOrCtrl+R', role: 'reload' },
+          { label: 'Toggle DevTools', accelerator: 'F12', role: 'toggleDevTools' },
+        ],
+      },
+    ]
+  : []; // Empty menu in production
 
 const menu = Menu.buildFromTemplate(template);
 Menu.setApplicationMenu(menu);
