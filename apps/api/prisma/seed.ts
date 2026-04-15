@@ -8,9 +8,7 @@ async function main() {
 
   await prisma.admin.upsert({
     where: { username: "admin" },
-    update: {
-      passwordHash
-    },
+    update: { passwordHash },
     create: {
       id: "1",
       username: "admin",
@@ -22,4 +20,6 @@ async function main() {
   console.log("Admin seeded/updated");
 }
 
-main();
+main()
+  .catch(console.error)
+  .finally(() => prisma.$disconnect());
