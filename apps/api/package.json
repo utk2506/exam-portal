@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.build.json",
-    "start": "node dist/src/index.js",
+    "start": "node dist/apps/api/src/index.js",
     "test": "node ../../node_modules/typescript/bin/tsc -p ../../packages/shared/tsconfig.json && node ../../node_modules/typescript/bin/tsc -p tsconfig.build.json && node scripts/run-tests.mjs",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",

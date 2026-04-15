@@ -1,4 +1,4 @@
-FROM node:22-alpine AS builder
+FROM node:20-bookworm AS builder
 
 WORKDIR /app
 
@@ -15,7 +15,8 @@ RUN npm run build:shared
 RUN npm run prisma:generate -w @exam-platform/api
 RUN npm run build -w @exam-platform/api
 
-FROM node:22-alpine AS runner
+
+FROM node:20-bookworm AS runner
 
 WORKDIR /app
 
