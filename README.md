@@ -1,95 +1,105 @@
-# Chimera Fresher's Drive 2026
+# Exam Portal - Enterprise CBT Platform
 
-LAN-only computer-based test platform for office deployments. The repo is structured as a greenfield `npm` workspace with a React frontend, Express + Prisma backend, shared TypeScript contracts, and an optional Python AI proctor service.
+A robust, full-stack Computer Based Test (CBT) platform designed for high-stakes office deployments and LAN/Cloud environments. Built with a modern TypeScript stack, it features advanced proctoring, real-time monitoring, and a JEE-style exam engine.
 
-## Workspace
+## 🚀 Key Features
 
-- `apps/frontend`: candidate and admin single-page app built with React, Vite, Tailwind, React Query, Socket.IO client, KaTeX, and Tiptap
-- `apps/api`: Express API, Prisma schema, realtime events, autosave/session logic, CSV/XLSX import, monitoring, grading, and exports
-- `packages/shared`: DTO types and Zod validation contracts shared by frontend and backend
-- `services/ai-proctor`: optional FastAPI scaffold for webcam-based cheating signals
-- `database`: checked-in PostgreSQL schema snapshot and question import template
-- `infra/nginx`: reverse proxy config for LAN deployment
+### Candidate Experience
+*   **JEE-Style Interface**: Professional, high-performance exam runtime UI.
+*   **Self-Registration**: Easy entry via exam codes with session resume support.
+*   **Hybrid Questions**: Support for MCQ and rich-text subjective answers.
+*   **Smart Persistence**: Rolling timers, local/server autosave, and auto-submit on expiry.
 
-## Implemented Scope
+### Admin & Monitoring
+*   **Live Dashboard**: Real-time monitoring of candidate progress and violations via Socket.IO.
+*   **Bulk Operations**: Rapid question authoring and bulk Excel/CSV/ZIP imports.
+*   **Advanced Analytics**: Score distribution charts, question-wise difficulty analysis, and funnel reports.
+*   **Grading Suite**: Dedicated interface for manual grading of subjective answers.
 
-- Candidate self-registration by exam code with resume support
-- Instruction screen and JEE-style runtime UI
-- MCQ and typed rich-text subjective answers
-- Rolling timers, autosave, reconnect/resume, and auto-submit
-- Browser anti-cheat logging for fullscreen exits, tab switches, blocked shortcuts, reconnect gaps, and IP changes
-- Watermark-based screenshot deterrence
-- Admin exam creation, question authoring, bulk import, live monitoring, manual subjective grading, analytics, and CSV export
-- Docker Compose deployment for Ubuntu with optional AI proctor service
+### Anti-Cheat Engine (SentraGuard)
+*   **Full-Screen Enforcement**: Logs and alerts on tab switching, minimize, and exit.
+*   **Shortcut Blocking**: Interception of `Ctrl+C`, `Ctrl+V`, `Right Click`, and `F12`.
+*   **Visual Deterrence**: Dynamic candidate-specific watermarking to prevent photography.
+*   **AI Integration**: Optional webcam-based AI proctoring for anomaly detection.
 
-## Quick Start
+---
 
-### Local Windows development
+## ☁️ AWS Cloud Hosting Guide
 
-1. Copy `.env.example` to `.env`.
-2. Install dependencies with `npm install`.
-3. Install PostgreSQL locally. The included bootstrap script can use the installed binaries even if the Windows service is not configured yet.
-4. Run `npm run start:local`.
+Follow these steps to deploy the Exam Portal on a production-ready AWS EC2 instance.
 
-That script will:
+### 1. Infrastructure Setup
+1.  **Launch Instance**: Use an Ubuntu 22.04 LTS instance (t3.medium or higher recommended).
+2.  **Elastic IP**: 
+    *   Go to **EC2 Dashboard > Elastic IPs**.
+    *   Click **Allocate Elastic IP address** and then **Associate** it with your instance.
+    *   *This ensures your IP never changes when the server restarts.*
+3.  **Security Group**: Open the following Inbound ports:
+    *   `22` (SSH)
+    *   `80` (HTTP)
+    *   `443` (HTTPS)
+    *   `5432` (Optional: Postgres if accessing externally)
 
-- generate Prisma client
-- start a local PostgreSQL cluster if the PostgreSQL binaries are installed but the service is not listening yet
-- push the schema to PostgreSQL
-- seed the default admin
-- open separate PowerShell windows for the API and frontend
+### 2. Domain Mapping
+1.  Go to your Domain Provider (e.g., GoDaddy, Cloudflare).
+2.  Create an **A Record**:
+    *   **Host**: `exam` (or `@` for root)
+    *   **Value**: Your **Elastic IP** address.
+3.  Wait for DNS propagation (updates usually take 5–30 minutes).
 
-### LAN / Ubuntu deployment
+### 3. Server Preparation
+Connect via SSH and run these commands to prepare the environment:
 
-1. Copy `.env.lan.example` to `.env`.
-2. Install Docker and Docker Compose on the Ubuntu server.
-3. Run `docker compose up --build -d`.
-4. Open `http://192.168.1.10/exam` for candidates and `http://192.168.1.10/admin` for admins.
+```bash
+# Update system
+sudo apt update && sudo apt upgrade -y
 
-## Useful Scripts
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
 
-- `npm run start:local`: bootstrap the local Windows stack and launch frontend/API
-- `npm run build`: builds shared package, API, and frontend
-- `npm run test`: runs the API verification script
-- `npm run prisma:generate`: regenerates Prisma client
-- `npm run prisma:push`: pushes the Prisma schema directly to the current database
-- `npm run prisma:migrate`: runs Prisma development migrations
-- `npm run prisma:seed`: creates or updates the local admin login
+# IMPORTANT: Disable native services that block ports 80/443
+sudo systemctl stop nginx
+sudo systemctl disable nginx
+sudo systemctl stop apache2
+sudo systemctl disable apache2
 
-## Default LAN URLs
+# Enable Docker on boot
+sudo systemctl enable docker
+```
 
-- Candidate: `http://192.168.1.10/exam`
-- Admin: `http://192.168.1.10/admin`
-- API health: `http://192.168.1.10/api/health`
+### 4. Deployment
+1.  **Clone the Repo**:
+    ```bash
+    git clone https://github.com/utk2506/exam-portal.git
+    cd exam-portal
+    ```
+2.  **Environment Setup**:
+    ```bash
+    cp .env.lan.example .env
+    nano .env  # Update JWT_SECRET and ADMIN_PASSWORD
+    ```
+3.  **Launch Stack**:
+    ```bash
+    docker compose up -d --build
+    ```
 
-## Admin Bootstrap
+### 5. SSL / HTTPS Configuration
+The included Nginx configuration expects Let's Encrypt certificates. You can generate them using Certbot on the host:
+```bash
+sudo apt install certbot
+sudo certbot certonly --standalone -d exam.chimeratechnologies.com
+```
+*Certificates will be automatically picked up by the Docker Nginx container via the volume mount.*
 
-The seed script creates one local admin using:
+---
 
-- `ADMIN_USERNAME`
-- `ADMIN_PASSWORD`
+## 🛠 Useful Commands
 
-Default values are documented in [.env.example](/c:/Users/ITSupport/Downloads/Exam%20Potal/.env.example).
+*   **View Logs**: `docker compose logs -f`
+*   **Restart App**: `docker compose restart api frontend`
+*   **Update Code**: `git pull origin master && docker compose up -d --build`
+*   **Reset DB**: `npm run prisma:push -w @exam-platform/api` (Run inside container)
 
-## Question Import
-
-- Spreadsheet columns are `type`, `promptHtml`, `optionAHtml`, `optionBHtml`, `optionCHtml`, `optionDHtml`, `correctOption`, `marks`, `sortOrder`, and optional `assetFilename`
-- Use [database/import-template.csv](/c:/Users/ITSupport/Downloads/Exam%20Potal/database/import-template.csv) as the starter format
-- Optional ZIP assets are extracted into `apps/api/uploads/exams/<examId>`
-
-## Database and Deployment
-
-- Prisma source schema: [apps/api/prisma/schema.prisma](/c:/Users/ITSupport/Downloads/Exam%20Potal/apps/api/prisma/schema.prisma)
-- SQL snapshot: [database/schema.sql](/c:/Users/ITSupport/Downloads/Exam%20Potal/database/schema.sql)
-- Compose stack: [docker-compose.yml](/c:/Users/ITSupport/Downloads/Exam%20Potal/docker-compose.yml)
-- Reverse proxy: [infra/nginx/default.conf](/c:/Users/ITSupport/Downloads/Exam%20Potal/infra/nginx/default.conf)
-- Local Windows bootstrap: [scripts/run-local.ps1](/c:/Users/ITSupport/Downloads/Exam%20Potal/scripts/run-local.ps1)
-- Local PostgreSQL bootstrap: [scripts/start-postgres-local.ps1](/c:/Users/ITSupport/Downloads/Exam%20Potal/scripts/start-postgres-local.ps1)
-- Local env template: [.env.example](/c:/Users/ITSupport/Downloads/Exam%20Potal/.env.example)
-- LAN env template: [.env.lan.example](/c:/Users/ITSupport/Downloads/Exam%20Potal/.env.lan.example)
-
-## Notes
-
-- Phase 1 anti-cheat is browser-based and best effort only.
-- Screenshot blocking is not possible in a normal browser; the platform uses watermark deterrence plus LAN/firewall controls.
-- AI proctoring is optional and feeds the same `violations` pipeline instead of a separate monitoring model.
+## 📄 License
+Confidential - Internal Use Only for Chimera Technologies.
