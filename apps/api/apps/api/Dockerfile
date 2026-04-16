@@ -25,5 +25,5 @@ COPY --from=builder /app .
 EXPOSE 8080
 
 CMD npx prisma migrate deploy --schema=apps/api/prisma/schema.prisma \
-    && npx prisma db seed \
+    && npx prisma db seed --schema=apps/api/prisma/schema.prisma \
     && npm run start -w @exam-platform/api
